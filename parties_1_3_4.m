@@ -1,5 +1,7 @@
 % Coeffs du pb %
 
+% Coeffs du pb %
+
 
 N=1000; %nb personnes
 B=1.5; % taux B auqeul chaque personne infectée I infecte une personne saine
@@ -33,9 +35,9 @@ title("R_0*S(t=0)/N = 5")
 
 
 %%% PARTIE 5 Limite diffusive %%%
-n = 2001; %nombre de pas de temps
+n = 2000; %nombre de pas de temps
 t_i = 0;
-t_f = 200;
+t_f = 365;
 t = linspace(t_i,t_f,n);
 dt = (t_f - t_i)/(n-1); % A vérifier pour le "-1"
 
@@ -55,15 +57,32 @@ R=[0]
 
 
 %Méthode d'euler
+tps=zeros(50,1);
+for j=[1:50]
 for i=[1:n-1]
+
 dwi=normrnd(0,dt);
 dwg=normrnd(0,dt);
 S(i+1)=S(i)-B/N*I(i)*S(i)*dt+sqrt(B/N*S(i)*I(i))*dwi;
 I(i+1)=I(i)+(B/N*I(i)*S(i)-gam*I(i))*dt-sqrt(B/N*S(i)*I(i))*dwi +sqrt(gam*I(i))*dwg;
 R(i+1)=R(i)-(S(i+1)-S(i)+I(i+1)-I(i));
+
+end
+I=abs(I);
+[a,ind]=max(I);
+
+
+
+
+for k=[ind+1:n-1]
+if I((k))>a/2
+tps(j)=k*dt;
+end
+end
 end
 
 
+var_temps_epidemie=var(tps)
 figure(2)
 plot(t,S)
 hold on
@@ -73,11 +92,12 @@ plot(t,R)
 legend("S","I","R")
 
 
+%Calcul de la variance
 
 
 %Ouverture%
 %Reinfection
-r=0.001 %paramètre plus injection
+r=2e-3 %paramètre plus injection
 i_0=1
 s_0=N-i_0
 I=[i_0]
@@ -92,6 +112,8 @@ dwg=normrnd(0,dt);
 S(i+1)=S(i)-B/N*I(i)*S(i)*dt+sqrt(B/N*S(i)*I(i))*dwi;
 I(i+1)=I(i)+(B/N*I(i)*S(i)-gam*I(i))*dt-sqrt(B/N*S(i)*I(i))*dwi +sqrt(gam*I(i))*dwg;
 R(i+1)=R(i)-(S(i+1)-S(i)+I(i+1)-I(i));
+
+
 R(i+1)=R(i+1)-r*R(i);
 S(i+1)=S(i+1)+r*R(i);
 T(i+1)=S(i+1)+I(i+1)+R(i+1);
@@ -114,7 +136,7 @@ legend("S","I","R")
 %Ouverture%
 %Reinfection + vaccination
 %paramètre plus injection
-v=0.001 %paramètre vaccination
+v=5e-4 %paramètre vaccination
 
 
 I=[i_0]
@@ -133,8 +155,8 @@ R(i+1)=R(i)-(S(i+1)-S(i)+I(i+1)-I(i));
 
 
 V(i+1)=V(i) +S(i)*v;
-R(i+1)=R(i+1)-r*i*(t(2)-t(1))/t_f*R(i);
-S(i+1)=S(i+1)+r*i*(t(2)-t(1))/t_f*R(i) -S(i)*v;
+R(i+1)=R(i+1)-r*R(i);
+S(i+1)=S(i+1)+r*R(i) -S(i)*v;
 T(i+1)=S(i+1)+I(i+1)+R(i+1)+V(i+1);
 end
 
@@ -152,8 +174,48 @@ plot(t,T)
 legend("S","I","R","V")
 
 
+%Ouverture%
+%beta dependant du temps 
+b_0=1
 
 
+v=0.0001 %paramètre vaccination
+
+
+I=[i_0]
+S=[s_0]
+R=[0]
+V=[0]
+T=[I(1)+S(1)+R(1)+V(1)]
+
+
+for i=[1:n-1]
+B=b_0*abs(cos(pi*(i-1)*dt/t_f));
+dwi=normrnd(0,dt);
+dwg=normrnd(0,dt);
+S(i+1)=S(i)-B/N*I(i)*S(i)*dt+sqrt(B/N*S(i)*I(i))*dwi;
+I(i+1)=I(i)+(B/N*I(i)*S(i)-gam*I(i))*dt-sqrt(B/N*S(i)*I(i))*dwi +sqrt(gam*I(i))*dwg;
+R(i+1)=R(i)-(S(i+1)-S(i)+I(i+1)-I(i));
+
+
+V(i+1)=V(i) +S(i)*v;
+R(i+1)=R(i+1)-r*R(i);
+S(i+1)=S(i+1)+r*R(i)-S(i)*v;
+T(i+1)=S(i+1)+I(i+1)+R(i+1)+V(i+1);
+end
+
+
+figure(5)
+plot(t,S)
+hold on
+plot(t,I)
+hold on
+plot(t,R)
+hold on
+plot(t,V)
+hold on
+plot(t,T)
+legend("S","I","R","V")
 %beta peut etre stocha, dependre du temps (confinement,..)
 %rajouter une equation dr dans le dernier modèle
 %rajouter une equation dV pour vacinés cf wikipedia
